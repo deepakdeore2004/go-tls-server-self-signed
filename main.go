@@ -1,45 +1,37 @@
 package main
 
 import (
-	"fmt"
-	// "io"
+	"crypto/tls"
 	"log"
 	"net/http"
 )
 
-func HelloServerHttp(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("This is an example server listening on http.\n"))
-	// fmt.Fprintf(w, "This is an example server.\n")
-	// io.WriteString(w, "This is an example server.\n")
-}
-
-func HelloServerHttps(w http.ResponseWriter, req *http.Request) {
-        w.Header().Set("Content-Type", "text/plain")
-        w.Write([]byte("This is an example server listening on https.\n"))
-        // fmt.Fprintf(w, "This is an example server.\n")
-        // io.WriteString(w, "This is an example server.\n")
-}
-
 func main() {
-	serverMuxHttp := http.NewServeMux()
-	serverMuxHttp.HandleFunc("/", HelloServerHttp)
+	server := &http.Server{
+		Addr: ":8443",
 
-	serverMuxHttps := http.NewServeMux()
-	serverMuxHttps.HandleFunc("/", HelloServerHttps)
+		Handler: http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+				w.Write([]byte("hello, world\n"))
+			},
+		),
 
-	go func() {
-		fmt.Println("Starting HTTP server")
-		err := http.ListenAndServe(":8080", serverMuxHttp)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+		TLSConfig: &tls.Config{
+			NextProtos: []string{"istio", "istio-http/1.1", "istio-peer-exchange"},
+		},
+		TLSNextProto: map[string]func(*http.Server, *tls.Conn, http.Handler){
+			"spdy/3": func(s *http.Server, conn *tls.Conn, h http.Handler) {
+				buf := make([]byte, 1)
+				if n, err := conn.Read(buf); err != nil {
+					log.Panicf("%v|%v\n", n, err)
+				}
+			},
+		},
+	}
 
-	fmt.Println("Starting HTTPS server")
-	err := http.ListenAndServeTLS(":8443", "server.crt", "server.key", serverMuxHttps)
+	err := server.ListenAndServeTLS("server.crt", "server.key")
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

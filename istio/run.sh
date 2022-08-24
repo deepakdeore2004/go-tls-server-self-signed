@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 read -p "istio revision: " REVISION 
 
