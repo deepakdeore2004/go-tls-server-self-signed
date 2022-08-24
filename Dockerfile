@@ -28,8 +28,10 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server /app/server
-COPY server.key server.crt /app
+COPY entrypoint.sh /app/
+
+EXPOSE 8080 8443
 
 # Run the web service on container startup.
-CMD ["/app/server"]
+CMD ["/app/entrypoint.sh"]
 
