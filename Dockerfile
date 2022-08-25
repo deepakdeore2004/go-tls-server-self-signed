@@ -23,7 +23,7 @@ FROM debian:buster-slim
 WORKDIR /app
 
 RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ca-certificates && \
+    ca-certificates curl tcpdump && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the binary to the production image from the builder stage.
