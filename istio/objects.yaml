@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: deepakdeore2004/go-tls-server-self-signed:v4
+        image: deepakdeore2004/go-tls-server-self-signed:v5
         ports:
         - containerPort: 8080
         - containerPort: 8443
